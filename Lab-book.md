@@ -418,4 +418,115 @@ cin.ignore(numeric_limits<streamsize>::max(), '\n');
 which clears the input stream after each iteration of the loop, this makes my program parse input such as 2b and 5.3 as valid inputs by truncating everything after the initial integer, by ignoring the rest of the stream we ensure that the bug does not occur on the next iteration of the loop when 'cin >> input' reads the input stream again.
 
 
+##Week 2 - Lab B
 
+### Question 1 
+
+**Question**
+
+Add the following line of code below the #include.
+```c++
+using namespace std;
+```
+This allows us to use the namespace std without explicitly adding std:: before any object or function defined in that namespace.
+
+Remove the std:: from the cin and cout and endl.
+
+Your code should still compile and run.
+
+Add a third variable that is a string type. You will need to add #include <string>.
+
+Take a string value from the user after you take the float value (the user can enter something like 23  4.586  Hello into the console window).
+
+Then output the string value to the console after you output the float value.
+
+**Solution**
+
+```c++
+#include <iostream>
+#include <string>
+using namespace std;
+
+int main(int argc, char* argv[])
+{
+	int i;
+	float f;
+	string s;
+	// take an int and float from the console - separated by a space, e.g. "1 6.7 Hello"
+	cin >> i >> f >> s;
+	// output the int, float, and string to the console
+	cout << "i=" << i << ", f=" << f << ", s=" << s << endl;
+}
+```
+
+**Output**
+```
+1 6.7 Hello
+i=1, f=6.7, s=Hello
+```
+
+<img width="944" height="128" alt="image" src="https://github.com/user-attachments/assets/b9fe0ab6-8282-4b0d-bcdb-d71463771d7d" />
+
+**Reflection**
+
+In this task I have learnt how to use the string datatype from the standard library in c++, I then utilised this string with the streaming operator to collect a string input from the user and output it back to the console.
+
+### Question 2
+
+**Question**
+
+The streaming operator >> can be used on most fundamental types and standard objects like string. However, it can lead to unexpected issues when storing values into an array.
+```c++
+#include <iostream>
+using namespace std;
+
+int main(int argn, char* argv[])
+{
+   char c[5];
+   cin >> c;
+   cout << "c=" << c << endl;
+}
+```
+The above code will store characters from the console window into the char array called c.
+
+Place a break point on the cout line of the code. Run the above program. In the console, enter the values 123 before selecting the return key.
+
+In Visual Studio, select from the menu, Debug -> Windows -> Autos. This will allow you to inspect values and memory addresses of variables etc.
+
+Click on the triangle next to the variable c, and you should see the following output: 
+
+<img width="626" height="198" alt="image" src="https://github.com/user-attachments/assets/b6c99896-12c2-445e-aaf8-c4b6e6ebd2d6" />
+
+
+You can see that this variable can hold 5 chars as we defined it to do. However, we are only using the first three and so we have the end of array character \0 so that the system knows we are not using the whole array. Continue to step threw the rest of the code so that you can see the output etc.
+
+Run the program again, but this time enter the values 123456789 before selecting the return key. Look at the value of c in the Autos window and you may see only the first 5 values but your code has tried to enter all 9 values into our variable. Notice that we cannot see the \0 end of array character - it is there but it is further along in memory from the start of the array so we cannot see it in the Autos window. Continue to step throw your code and you should receive a Run-Time Check Failure that is alerting you of this issue.
+
+In Visual Studio, change the build to Release and then select from the menu, Debug -> Start Without Debugging. The whole 9 values should now be outputted because release will blindly output from the start of the array until it reaches the end array character.
+
+The >> streaming operator is great for storing values into different types, but it should be avoided to store values into an array.
+
+Replace cin >> c with the following code:
+
+cin.get(c, 5);
+This code will store up to 4 values followed by the end of array character. Run your code as a normal Debug build and with the Debugger and inspect and document the values and see the output. get() is usually safer for storing multiple characters in an array that the >> operator.
+
+**Solution**
+
+```c++
+#include <iostream>
+using namespace std;
+
+int main(int argn, char* argv[])
+{
+	char c[5];
+	cin.get(c, 5);
+	cout << "c=" << c << endl;
+}
+```
+
+**Reflection**
+
+<img width="845" height="680" alt="image" src="https://github.com/user-attachments/assets/40e95836-8bcc-42e6-a3aa-646c0722ecde" />
+
+As shown from the above screenshot, the get function was much safer for inputting into a character array than the streaming operator. This is because, unlike with the streaming operator which  
