@@ -418,7 +418,7 @@ cin.ignore(numeric_limits<streamsize>::max(), '\n');
 which clears the input stream after each iteration of the loop, this makes my program parse input such as 2b and 5.3 as valid inputs by truncating everything after the initial integer, by ignoring the rest of the stream we ensure that the bug does not occur on the next iteration of the loop when 'cin >> input' reads the input stream again.
 
 
-##Week 2 - Lab B
+## Week 2 - Lab B
 
 ### Question 1 
 
