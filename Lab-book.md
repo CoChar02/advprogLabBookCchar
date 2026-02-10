@@ -420,7 +420,7 @@ which clears the input stream after each iteration of the loop, this makes my pr
 
 ## Week 2 - Lab B
 
-### Question 1 
+### Question 1 The good ```>>``` Streaming Operator
 
 **Question**
 
@@ -471,7 +471,7 @@ i=1, f=6.7, s=Hello
 
 In this task I have learnt how to use the string datatype from the standard library in c++, I then utilised this string with the streaming operator to collect a string input from the user and output it back to the console.
 
-### Question 2
+### Question 2 The bad ```>>``` streaming operator
 
 **Question**
 
@@ -529,4 +529,49 @@ int main(int argn, char* argv[])
 
 <img width="845" height="680" alt="image" src="https://github.com/user-attachments/assets/40e95836-8bcc-42e6-a3aa-646c0722ecde" />
 
-As shown from the above screenshot, the get function was much safer for inputting into a character array than the streaming operator. This is because, unlike with the streaming operator which  
+As shown from the above screenshot, the get function was much safer for inputting into a character array than the streaming operator.
+
+This is because the streaming operator ```>>``` will read and place all incoming data into the array with no regard for the array size, this causes a potential overflow or memory issue as the end of array character is not where it is expected to be. This makes the streaming operator unsuitable for use in inputting into an array as it is easy to cause memory issues by providing too much input into the input stream. The streaming operator does, however, excel in assigning different data types on input from the input stream, due to handling things such as parsing and whitespace handling automatically, this makes ```>>``` appropriate for reading specific data fields such as seen in Q1 where different data types were parsed and saved from the input stream, deliminated by the whitespace between them.
+
+The get function, on the other hand, may be more appropriate for inputting into a character array as the function will only read the provided number of characters from the input stream, including whitespace. This prevents the issues raised with the ```>>``` streaming operator as, so long as too many characters are not given as the length the function, the function will automatically stop reading and inputting into the array when the specified number of characters has been reached. This then ensures that there are no array memory issues caused by assigning too many characters into the array.
+The Get function may not be as appropriate for different data types as the ```>>``` operator, this is due to it only reading characters from the input stream with no regard for parsing into other datatypes where that may be applicable, for example `56` would be read as two characters with values 53 and 54 respectively, whereas the streaming operator may instead be able read the input as a single number, 56, if it is expecting an integer input.
+
+
+### Question 3 Assembly Language
+
+**Reflection**
+
+The debugger provides many tools for examining how the CPU executes the code that we write.
+The disassembly window provides us with a line by line view of the assembly instructions generated for the written code, including relevant memory addresses, and instructions and allows the debugger to execute these instructions line by line
+
+```
+00007FF6138B23A4  mov         dword ptr [start],3
+```
+
+for example, this line demonstrates that when the instruction pointer reaches ```...23A4```, it should MOVE a double length word (32 bits) to the address specified by the variable [start], with the value being 3.
+
+```
+00007FF6138B23C0  cmp         dword ptr [count],0Ah  
+00007FF6138B23C4  jge         main+5Dh (07FF6138B23DDh)
+```
+
+These lines tell the CPU to compare the value of the value in the memory address specified by the variable [count] to the constant 0Ah (10). 
+
+The following instruction then tells the CPU to ```jump if greater or equal``` based on the result of the comparison. If the conditon was true (count is greater than or equal to 10), the instruction pointer jumps to the instruction at the specified address ```07FF6138B23DD```
+
+
+The debugger also provides tools to view the registers in use by the program,
+
+<img width="1831" height="621" alt="image" src="https://github.com/user-attachments/assets/7396c526-991b-4d13-86a1-8a42186568da" />
+
+Here we can see that in these steps, some registers have changed values. 
+
+Firstly, the instruction pointer register, RIP, was changed to ```...23D8```, this is instruction address of the line that the CPU has just finished executing. 
+We can also see that the value of the address in RAX has been altered, this is due to the increment instruction telling the cpu to increase the value at the RAX register.
+Because of this increment operation, the EFL register is also updated to display flag values for the output of the incrementation, the shown value of ```...0202``` means that this output was a non-zero positive integer.
+
+
+<img width="1418" height="884" alt="image" src="https://github.com/user-attachments/assets/9eb2f443-f31c-4cdb-8e9c-38e92d8b3298" />
+
+
+The debugger also allows us to see the data stack for the code we have written, by looking at the value of the stack pointer register (RSP), we can find where our variables are being held on the stack. This, as the above screenshot shows, allows us to read their values and see updates as they are changed as we step through the function. In the above screenshot the value 07 has been highlighted in red, showing that it has been changed, from the locals tab we can see that the ```count``` variable has been updated to be 7, thus we can note that the count variable is being stored at the data address ```...F5BE```.
