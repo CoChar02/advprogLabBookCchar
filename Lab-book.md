@@ -575,3 +575,127 @@ Because of this increment operation, the EFL register is also updated to display
 
 
 The debugger also allows us to see the data stack for the code we have written, by looking at the value of the stack pointer register (RSP), we can find where our variables are being held on the stack. This, as the above screenshot shows, allows us to read their values and see updates as they are changed as we step through the function. In the above screenshot the value 07 has been highlighted in red, showing that it has been changed, from the locals tab we can see that the ```count``` variable has been updated to be 7, thus we can note that the count variable is being stored at the data address ```...F5BE```.
+
+
+## Week 3 - Lab C
+
+### Q1. Passing Command Arguments
+
+**Solution**
+<img width="1345" height="678" alt="image" src="https://github.com/user-attachments/assets/4a26dc82-ca04-45d1-a23c-25b79809ede0" />
+
+<img width="902" height="63" alt="image" src="https://github.com/user-attachments/assets/98321642-2d8f-4d59-ac63-912523cef87a" />
+
+We can add command line arguments to a c++ program in visual studio by navigating to the project dropdown, clicking the Properties of the project and then navigating to the debugging page. We can then enter any desired command line arguments into the allocated space, deliminated by whitespace. This allows us to pass specific arguments to a program, in this case it is being used to specify file input and output filepaths. From the above screenshot we can see that the filenames have successfully been passed to the program.
+
+### Q2. Copying a Text File
+
+**Question**
+
+Complete the functionality inside of the Copy(char filenamein[], char filenameout[]) function. You need to add code that will try to open a text file given by the filenamein array as the name of the input file. You need to add code to create and output file using the filenameout array as the name of the ouput file. Then you can add code that will take each char from the input file and put it in the output file.
+
+Make sure that you check for the input and output files existence before trying to copy.
+
+Test your code thoroughly, e.g. try providing filenames that do not exist.
+
+**Solution**
+
+```c++
+#include <iostream>
+#include <string>
+#include <fstream>
+using namespace std;
+
+/*
+* Partially completed program
+* The program should copy a text file
+*
+*/
+
+bool Copy(char filenamein[], char filenameout[])
+{
+	string line;
+	ifstream fileIn(filenamein); //Open input file
+	if (fileIn.fail()) { //Check input file was successfully opened.
+		cout << "Error Opening File, check file " << filenamein << " exists and has correct permissions." << endl;
+		fileIn.close();
+		return false;
+	}
+	ofstream fileOut(filenameout); //Create and check validity of output file
+	if (!fileOut.is_open()) {
+		fileOut.close();
+		fileIn.close();
+		cout << "Error creating or opening output file." << endl;
+		return false;
+	}
+	while (getline(fileIn, line)) { // Loop through input file and copy line to output file.
+		fileOut << line << endl;
+	}
+	fileOut.close();
+	fileIn.close();
+	return true;
+}
+
+int main(int argn, char* argv[])
+{
+	if (argn != 3) {
+		cerr << "Usage: " << argv[0] << " <input filename> <output filename>" << endl;
+		int keypress; cin >> keypress;
+		return -1;
+	}
+
+	if (Copy(argv[1], argv[2]))
+	{
+		cout << "Copy successful" << endl;
+	}
+	else
+	{
+		cout << "Copy error" << endl;
+	}
+
+	system("PAUSE");
+}
+```
+
+**Test Input**
+
+<img width="779" height="182" alt="image" src="https://github.com/user-attachments/assets/a99a339c-c915-4420-9fb1-694a5f632cc8" />
+
+
+<img width="318" height="145" alt="image" src="https://github.com/user-attachments/assets/840474e1-9c3d-4a6a-9b65-2a981021864c" />
+
+Valid input filepath and file to be copied
+
+--
+
+<img width="586" height="92" alt="image" src="https://github.com/user-attachments/assets/16ca649f-8fbf-494c-87f4-ea699333962f" />
+
+Invalid input file path.
+
+**Output**
+
+<img width="275" height="51" alt="image" src="https://github.com/user-attachments/assets/e7320895-46ea-40ee-9db8-72dd67706060" />
+
+
+
+<img width="666" height="304" alt="image" src="https://github.com/user-attachments/assets/3604201d-ab7a-4f60-8296-24652784919e" />
+
+
+
+<img width="536" height="144" alt="image" src="https://github.com/user-attachments/assets/55cfcb2c-c057-4b71-abf6-d8dc89b615ab" />
+
+
+--
+
+<img width="794" height="115" alt="image" src="https://github.com/user-attachments/assets/39e7806f-f646-44af-9b67-ddc886b153c5" />
+
+
+**Reflection**
+
+In this task I have learnt how to read in text file input and copy it into an output file, I have also learnt how to check if a file was successfully opened and the filesystem did not encounter an error such as the target file not existing or an issue with file accesss permissions. This process is similar to how file handling is handled in other languages i have used such as c#, though may require some additional manual checking to ensure that files exist and are valid. I also learnt that the output file stream will automatically create destination files if they do not exist, and overwrite them if they do in the default writing mode. If i wished to append to the file instead, it can be done as so:
+```c++
+//Default write/overwrite mode
+ofstream fileOut(filenameout)
+//Append mode
+ofstream fileOut(filenameout, ios::app)
+```
