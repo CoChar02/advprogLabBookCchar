@@ -699,3 +699,40 @@ ofstream fileOut(filenameout)
 //Append mode
 ofstream fileOut(filenameout, ios::app)
 ```
+
+### Question 3
+
+**Reflection**
+
+<img width="616" height="310" alt="image" src="https://github.com/user-attachments/assets/6a4d9f20-48a3-4478-8c68-2453301596be" />
+
+
+Using the disassembler discussed in the last lab we can see how functions are called and variables passed into memory. 
+```
+00007FF7C4712370  mov         dword ptr [rsp+10h],edx  
+00007FF7C4712374  mov         dword ptr [rsp+8],ecx
+```
+
+First the initial values passed to the function are taken from registers ecx (a) and edx (b) and pushed to locations on the stack using an offset of the stack pointer (rsp).
+
+```
+00007FF7C4712378  push        rbp  
+00007FF7C4712379  push        rdi
+```
+
+The base pointer (rbp) and Destination Index register (rdi) then have their values pushed to the stack, this keeps track of their initial values as these are supposed to non-volatile and should be the same when the program exits the function.
+
+```
+00007FF7C471237A  sub         rsp,0E8h
+```
+
+232 Bytes (0E8h) are then allocated on the stack starting from the stack pointer (rsp)
+
+```
+00007FF7C4712381  lea         rbp,[rsp+20h]
+```
+
+The new stack base pointer is then calculated by taking the value 32 bytes above the current stack pointer. The lea command takes this address and saves it into the base pointer register, allowing the function to keep track of its variables.
+
+the remaining lines in the call section are related to the JustMyCode setting in visual studios debugger and are not relevant.
+
