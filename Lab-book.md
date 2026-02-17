@@ -704,35 +704,128 @@ ofstream fileOut(filenameout, ios::app)
 
 **Reflection**
 
-<img width="616" height="310" alt="image" src="https://github.com/user-attachments/assets/6a4d9f20-48a3-4478-8c68-2453301596be" />
+<img width="522" height="263" alt="image" src="https://github.com/user-attachments/assets/6d7c7049-adf6-4da1-a59f-75a1c2a4f7c5" />
+
 
 
 Using the disassembler discussed in the last lab we can see how functions are called and variables passed into memory. 
 ```
-00007FF7C4712370  mov         dword ptr [rsp+10h],edx  
-00007FF7C4712374  mov         dword ptr [rsp+8],ecx
+00DF2510  push        ebp  
+00DF2511  mov         ebp,esp
 ```
 
-First the initial values passed to the function are taken from registers ecx (a) and edx (b) and pushed to locations on the stack using an offset of the stack pointer (rsp).
+The initial value of the stack base pointer, ebp is pushed to the stack, this preserves its original value as the calling function expects this value to be non-volatile and should remain the same when this function returns.
+
+The value of the stack pointer is then moved to the base pointer, this sets our new base pointer and keeps track of the function memory frame.
 
 ```
-00007FF7C4712378  push        rbp  
-00007FF7C4712379  push        rdi
+00DF2513  sub         esp,0C0h
 ```
 
-The base pointer (rbp) and Destination Index register (rdi) then have their values pushed to the stack, this keeps track of their initial values as these are supposed to non-volatile and should be the same when the program exits the function.
+192 bytes are subtracted from the stack pointer, this defines our function frame size and makes room for local variables.
 
 ```
-00007FF7C471237A  sub         rsp,0E8h
+00DF2519  push        ebx  
+00DF251A  push        esi  
+00DF251B  push        edi
 ```
 
-232 Bytes (0E8h) are then allocated on the stack starting from the stack pointer (rsp)
+Initial values of ebx, esi and edi are pushed to the stack.
 
 ```
-00007FF7C4712381  lea         rbp,[rsp+20h]
+00DF251C  mov         edi,ebp  
+00DF251E  xor         ecx,ecx  
+00DF2520  mov         eax,0CCCCCCCCh  
+00DF2525  rep stos    dword ptr es:[edi]
 ```
 
-The new stack base pointer is then calculated by taking the value 32 bytes above the current stack pointer. The lea command takes this address and saves it into the base pointer register, allowing the function to keep track of its variables.
+This defines a loop used by the debugger to fill the function frame with junk data, overwriting any previous data that may be present in the frame from previous operations, providing a clearer view of how memory is being stored and accessed in the stack at runtime.
 
 the remaining lines in the call section are related to the JustMyCode setting in visual studios debugger and are not relevant.
 
+
+<img width="1292" height="633" alt="image" src="https://github.com/user-attachments/assets/477e99fa-05d0-48fb-8b0b-f7259a975528" />
+
+
+Using the register view, we can see the value at EAX here is ```00000014```
+
+
+<img width="1916" height="615" alt="image" src="https://github.com/user-attachments/assets/60488a2a-0bbb-4fbd-82f6-8fb2f253c45f" />
+
+
+Stepping through we can see that the value of EAX was pushed to the stack and now resides at address with value ```...F817```
+
+Variables A and B are 32 bit integers, this can be seen from the memory stack trace such as 
+
+```
+0x00DDFD73  77 c0 d0 1f 61 19 33 6f 77 23 10 df 00 23 10 df 00 00 10 19 01 23 10 df 00 23 10 df 00 9c fd dd 00 d5 17 12 61 c0 d0 1f 61 77 f0 df 00 77 f0 df 00 0a 00 00 00 14 00 00 00  wÀÐ.a.3ow#.ß.#.ß.....#.ß.#.ß.œýÝ.Õ..aÀÐ.awðß.wðß.........
+```
+
+In this line we can see that B and A have been pushed to the stack as 4 bytes, with a (value of 10) represented as ```0a 00 00 00``` and the value of b (20) represented as  ```14 00 00 00``` just below it. Values on the stack are reversed, this is called little endian and stores the least significant byte at the lowest memory address. The actual memory addresses of these values would be ```0x00DDFD73``` plus their offset within the row, for the case of A: ```0x00DDFD73 + 48 (0x30h)```, hence A resides at ```0x00DDFDA3```, with B residing 4 bytes after that at ```0x00DDFDA7```
+
+
+```c++
+#include <iostream>
+using namespace std;
+
+int mymax(int a, int b)
+{
+	if (a > b)
+		return a;
+	else
+		return b;
+}
+
+void threeArgs(char ch, __int64 lng, float flt) {
+	cout << "ch= " << ch << ", long= " << lng << ", float= " << flt << endl;
+	return;
+}
+
+int main(int, char**) {
+
+	int a = 10;
+	int b = 20;
+
+	char ch = 'a';
+	__int64 lng = 1200;
+	float flt = 4.3;
+
+	threeArgs(ch, lng, flt);
+
+	int max = mymax(a, b);
+
+	cout << "a=" << a << ", b=" << b << endl;
+	cout << "max=" << max << endl;
+
+	return 0;
+}
+```
+<img width="952" height="144" alt="image" src="https://github.com/user-attachments/assets/c71f9f2f-4938-44d0-ba3d-53a9b97a0890" />
+
+
+<img width="1882" height="544" alt="image" src="https://github.com/user-attachments/assets/ffee824d-02a9-4046-a2ed-c2af467cad16" />
+
+4 byte float has been saved onto the stack with the value of ```9a 99 89 40```  (again note values are reversed on the stack (little endian)) to achieve this the compiler first pushes a dummy ecx value before overwriting it with the value from the xmm0 register.
+
+<img width="1919" height="671" alt="image" src="https://github.com/user-attachments/assets/eb89b45d-8cd9-4bb1-983e-de208c920919" />
+
+The 64 bit integer used has been stored on the stack as ```b0, 04, 00, 00, 00, 00, 00, 00``` (04b0h), this is achieved with the instructions
+
+```
+000D217C  mov         eax,dword ptr [ebp-2Ch]  
+000D217F  push        eax  
+000D2180  mov         ecx,dword ptr [lng]  
+000D2183  push        ecx
+```
+this first moves the high bytes of the long into the stack using the eax register, before pushing the lower bytes into the stack using the ecx register.
+
+<img width="1869" height="671" alt="image" src="https://github.com/user-attachments/assets/2f4ed7fb-6188-4bce-af26-db97e6ab2526" />
+
+Finally the char has been pushed to the stack with the instructions 
+
+```
+000D2184  movzx       edx,byte ptr [ch]  
+000D2188  push        edx
+```
+
+these, as expected, move the byte value at the variable address [ch] into the edx register then push it onto the stack, as seen in the above screenshot it resides just next to the long previously pushed.
