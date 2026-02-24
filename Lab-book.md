@@ -1538,3 +1538,35 @@ Implement the above pointer chain
 
 **Solution**
 
+```c++
+	void* pointer1;
+	void* pointer2 = &pointer1;
+	void* pointer3 = &pointer2;
+	void* pointer4 = &pointer3;
+
+	pointer1 = &pointer4;
+
+	cout << "Pointer 1: " << &pointer1 << " - Points at: " << pointer1 << endl;
+	cout << "Pointer 2: " << &pointer2 << " - Points at: " << pointer2 << endl;
+	cout << "Pointer 3: " << &pointer3 << " - Points at: " << pointer3 << endl;
+	cout << "Pointer 4: " << &pointer4 << " - Points at: " << pointer4 << endl;
+
+	cout << endl;
+
+	void* currentPointer = pointer1;
+
+	for (int i = 0; i < 8; i++) 
+	{
+		cout << "Current Pointer: " << currentPointer;
+		//*(void**) 
+		//(void**) cast the address inside of currentPointer as a pointer to a void*
+		//*(void**) get the value of the cast void** (a void*)
+		currentPointer = *(void**)currentPointer;
+		cout << " - Next Pointer: " << currentPointer << endl;
+	}
+```
+
+**Output**
+
+<img width="676" height="270" alt="image" src="https://github.com/user-attachments/assets/bca266fa-90c0-4e80-aba0-622682fd041e" />
+
