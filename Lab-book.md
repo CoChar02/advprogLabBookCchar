@@ -1201,7 +1201,7 @@ Finally I loop through the grid using the previously discussed grid size fields,
 This however would add an extra whitespace character at the end of each line which I preferred to not include, this may matter for file handling that is more character sensative to format or whitespace, such as when reading char by char.
 
 
-### Q
+### Q4. Pointers - Basics
 
 **Question**
 
@@ -1452,6 +1452,7 @@ Compile and run the program. Checking your solution with the debugger and disass
 
 **Solution**
 
+```c++
 void functionD() {
 	double x = 3.14;
 
@@ -1464,7 +1465,7 @@ void functionD() {
 
 	cout << "x= " << x << endl;
 }
-
+```
 **Output**
 
 <img width="1023" height="68" alt="image" src="https://github.com/user-attachments/assets/7049411c-2b74-4b49-a7e0-963bd7d7ed50" />
