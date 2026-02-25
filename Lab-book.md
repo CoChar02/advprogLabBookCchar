@@ -574,7 +574,7 @@ Because of this increment operation, the EFL register is also updated to display
 <img width="1418" height="884" alt="image" src="https://github.com/user-attachments/assets/9eb2f443-f31c-4cdb-8e9c-38e92d8b3298" />
 
 
-The debugger also allows us to see the data stack for the code we have written, by looking at the value of the stack pointer register (RSP), we can find where our variables are being held on the stack. This, as the above screenshot shows, allows us to read their values and see updates as they are changed as we step through the function. In the above screenshot the value 07 has been highlighted in red, showing that it has been changed, from the locals tab we can see that the ```count``` variable has been updated to be 7, thus we can note that the count variable is being stored at the data address ```...F5BE```.
+The debugger also allows us to see the data stack for the code we have written, by looking at the value of the stack pointer register (RSP), we can find where our variables are being held on the stack. This, as the above screenshot shows, allows us to read their values and see updates as they are changed as we step through the function. In the above screenshot the value 07 has been highlighted in red, showing that it has been changed, from the locals tab we can see that the ```count``` variable has been updated to be 7, thus we can note that the count variable is being stored near the data address ```...F5BE``` with an offset of 22 bytes.
 
 
 ## Week 3 - Lab C
@@ -753,7 +753,7 @@ Using the register view, we can see the value at EAX here is ```00000014```
 <img width="1916" height="615" alt="image" src="https://github.com/user-attachments/assets/60488a2a-0bbb-4fbd-82f6-8fb2f253c45f" />
 
 
-Stepping through we can see that the value of EAX was pushed to the stack and now resides at address with value ```...F817```
+Stepping through we can see that the value of EAX was pushed to the stack and now resides at address with value ```...F817 with an offset of 52 bytes (0x34h)```, so it is stored at `F84B`
 
 Variables A and B are 32 bit integers, this can be seen from the memory stack trace such as 
 
@@ -761,7 +761,7 @@ Variables A and B are 32 bit integers, this can be seen from the memory stack tr
 0x00DDFD73  77 c0 d0 1f 61 19 33 6f 77 23 10 df 00 23 10 df 00 00 10 19 01 23 10 df 00 23 10 df 00 9c fd dd 00 d5 17 12 61 c0 d0 1f 61 77 f0 df 00 77 f0 df 00 0a 00 00 00 14 00 00 00  wÀÐ.a.3ow#.ß.#.ß.....#.ß.#.ß.œýÝ.Õ..aÀÐ.awðß.wðß.........
 ```
 
-In this line we can see that B and A have been pushed to the stack as 4 bytes, with a (value of 10) represented as ```0a 00 00 00``` and the value of b (20) represented as  ```14 00 00 00``` just below it. Values on the stack are reversed, this is called little endian and stores the least significant byte at the lowest memory address. The actual memory addresses of these values would be ```0x00DDFD73``` plus their offset within the row, for the case of A: ```0x00DDFD73 + 48 (0x30h)```, hence A resides at ```0x00DDFDA3```, with B residing 4 bytes after that at ```0x00DDFDA7```
+In this line we can see that B and A have been pushed to the stack as 4 bytes, with a (value of 10) represented as ```0a 00 00 00``` and the value of b (20) represented as  ```14 00 00 00``` just below it. Values on the stack are reversed, this is called little endian and stores the least significant byte at the lowest memory address. The actual memory addresses of these values would be ```0x00DDFD73``` plus their offset within the row, for the case of A: ```0x00DDFD73 + 49 (0x31h)```, hence A resides at ```0x00DDFDA4```, with B residing 4 bytes after that at ```0x00DDFDA8```
 
 
 ```c++
