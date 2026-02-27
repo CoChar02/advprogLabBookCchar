@@ -1766,7 +1766,7 @@ _grid1.txt_
 
 **Reflection**
 
-In this task I have extended my work from the previous lab to include reading and writing the grid into a stream with the auxillary `<< and >>` operators. To do this I assigned the operator override functions as `friends` of the grid class, this allowed them to access private or protected data variables (like `m_grid`) of the grid class. While I could have exposed the grid with a public getter, I believed using the friend modifier to be pertinent as the stream read and write operations should happen as quickly as possible and the read/write operations will be making many calls to the getter, which may negatively impact performance. The Grid was passed by reference to the stream operators as we do not want to copy it in memory when calling these operators, the output stream operator also uses a constant for the grid as it should never change when writing to the ostream.
+In this task I have extended my work from the previous lab to include reading and writing the grid into a stream with the auxillary `<< and >>` operators. To do this I assigned the operator overload functions as `friends` of the grid class, this allowed them to access private or protected data variables (like `m_grid`) of the grid class. While I could have exposed the grid with a public getter, I believed using the friend modifier to be pertinent as the stream read and write operations should happen as quickly as possible and the read/write operations will be making many calls to the getter, which may negatively impact performance. The Grid was passed by reference to the stream operators as we do not want to copy it in memory when calling these operators, the output stream operator also uses a constant for the grid as it should never change when writing to the ostream.
 
 After defining the overloaded operators as friends and then outside of the class in the headerfile, in the source file I added the operator functionality.
 
@@ -1812,4 +1812,630 @@ Read
 
 **Solution**
 
+_Fraction.h_
+```c++
+#pragma once
+#include<iostream>
 
+class Fraction
+{
+public:
+	// default constructor
+	Fraction();
+	// specific constructor
+	Fraction(int num, int den);
+	// arithmetic facilitators
+	Fraction Add(const Fraction& rhs) const;
+	Fraction Subtract(const Fraction& rhs) const;
+	Fraction Multiply(int scale) const;
+	Fraction Divide(int scale) const;
+	Fraction Multiply(const Fraction& rhs) const;
+	Fraction Divide(const Fraction& rhs) const;
+	// getters/inspectors
+	int Num() const;
+	int Den() const;
+	// setters/mutators
+	void Num(int num);
+	void Den(int den);
+	// stream facilitators
+	void Write(std::ostream& sout) const;
+	void Read(std::istream& sin);
+
+private:
+	// data members
+	int m_num;
+	int m_den;
+};
+
+```
+
+
+_Fraction.cpp_
+```c++
+#include "Fraction.h"
+
+/// <summary>
+/// Default Fraction Constructor, Initialises to 0/1
+/// </summary>
+Fraction::Fraction() : Fraction(0, 1)
+{
+}
+/// <summary>
+/// Create a fraction with provided params
+/// </summary>
+/// <param name="num">Fraction Numerator</param>
+/// <param name="den">Fraction Denominator</param>
+Fraction::Fraction(int num, int den)
+{
+	Num(num);
+	Den(den);
+}
+/// <summary>
+/// Add the provided fraction to the this fraction
+/// </summary>
+/// <param name="rhs">Fraction object to add</param>
+/// <returns>New Fraction with total value</returns>
+Fraction Fraction::Add(const Fraction& rhs) const
+{
+	return Fraction((m_num * rhs.Den() + rhs.Num() * m_den), (m_den * rhs.Den()));
+}
+/// <summary>
+/// Subtract the provided fraction from this fraction
+/// </summary>
+/// <param name="rhs">Fraction to subtract</param>
+/// <returns>New Fraction with total value</returns>
+Fraction Fraction::Subtract(const Fraction& rhs) const
+{
+	return Fraction((m_num * rhs.Den() - rhs.Num() * m_den), (m_den * rhs.Den()));
+}
+/// <summary>
+/// Multiply the current fraction by a provided scale
+/// </summary>
+/// <param name="scale">Scale to Multiply fraction by</param>
+/// <returns>New Fraction with total value</returns>
+Fraction Fraction::Multiply(int scale) const
+{
+	return Fraction(m_num * scale, m_den);
+}
+/// <summary>
+/// Divide the current fraction by a provided scale
+/// </summary>
+/// <param name="scale">Scale to divide fraction by</param>
+/// <returns>New Fraction with total value</returns>
+Fraction Fraction::Divide(int scale) const
+{
+	return Fraction(m_num, m_den * scale);
+}
+/// <summary>
+/// Multiply the current fraction by a provided fraction
+/// </summary>
+/// <param name="rhs">Multiplier fraction</param>
+/// <returns>New Fraction with total value</returns>
+Fraction Fraction::Multiply(const Fraction& rhs) const 
+{
+	return Fraction((m_num * rhs.Num()), m_den * rhs.Den());
+}
+/// <summary>
+/// Divide the current fraction by a provided fraction
+/// </summary>
+/// <param name="rhs">Divisor Fraction</param>
+/// <returns>New Fraction with total value</returns>
+Fraction Fraction::Divide(const Fraction& rhs) const
+{
+	return Fraction(m_num * rhs.Den(), m_den * rhs.Num());
+}
+
+int Fraction::Num() const
+{
+	return m_num;
+}
+
+int Fraction::Den() const
+{
+	return m_den;
+}
+
+void Fraction::Num(int num)
+{
+	m_num = num;
+}
+
+void Fraction::Den(int den)
+{
+	if (den == 0) 
+	{
+		throw std::invalid_argument("Denominator cannot be set to 0!");
+	}
+	m_den = den;
+}
+
+void Fraction::Write(std::ostream& sout) const
+{
+	sout << Num() << "/" << Den();
+}
+/// <summary>
+/// Read a fraction from a stream in format "Num/Den"
+/// </summary>
+/// <param name="sin">stream input</param>
+void Fraction::Read(std::istream& sin)
+{
+	int num;
+	int den;
+	char divSymbol;
+
+	sin >> num;
+	sin >> divSymbol;
+	sin >> den;
+	//stream fail, no divisor, denominator is 0
+	if (!sin || divSymbol != '/' || den == 0)
+	{
+		sin.setstate(std::ios::failbit); //Stream read fail, do nothing to the fraction
+		return;
+	}
+
+	m_num = num;
+	m_den = den; //don't use mutator as we have already verified den != 0 and it can throw an error
+}
+
+```
+
+**Test Data**
+
+```c++
+#include "Fraction.h"
+#include <iostream>
+using namespace std;
+
+int main(int args, char** argv)
+{
+    Fraction f1(1, 2);        // 1/2
+    Fraction f2(3, 4);        // 3/4
+    Fraction result;
+
+    result = f1.Add(f2);      // 1/2 + 3/4 = 10/8
+    cout << "1/2 + 3/4 = ";
+    result.Write(cout);
+    cout << endl;
+
+    result = f2.Subtract(f1); // 3/4 - 1/2 = 2/8
+    cout << "3/4 - 1/2 = ";
+    result.Write(cout);
+    cout << endl;
+
+    result = f2.Multiply(3);  // 3/4 * 3 = 9/4
+    cout << "3/4 * 3 = ";
+    result.Write(cout);
+    cout << endl;
+
+    result = f2.Multiply(f1); // 3/4 * 1/2 = 3/8
+    cout << "3/4 * 1/2 = ";
+    result.Write(cout);
+    cout << endl;
+
+    result = f2.Divide(3); // 3/4 / 3 = 1/4
+    cout << "3/4 / 3 = ";
+    result.Write(cout);
+    cout << endl;
+
+    result = f2.Divide(f1); // 3/4 / 1/2 = 6/4
+    cout << "3/4 / 1/2 = ";
+    result.Write(cout);
+    cout << endl;
+
+    Fraction f3;
+    f3.Read(cin);             // input format is "1/2" for a fraction with numerator 1 and denominator 2
+    cout << "Read = ";
+    f3.Write(cout);
+    cout << endl;
+
+    system("pause");
+}
+```
+
+**Output**
+
+```
+1/2 + 3/4 = 10/8
+3/4 - 1/2 = 2/8
+3/4 * 3 = 9/4
+3/4 * 1/2 = 3/8
+3/4 / 3 = 3/12
+3/4 / 1/2 = 6/4
+7/12
+Read = 7/12
+```
+<img width="357" height="189" alt="image" src="https://github.com/user-attachments/assets/b4b919ac-60f7-4127-bacf-6965b6a84db4" />
+
+**Reflection**
+
+In this task I have implemented the Fraction class, this includes creating the header file, declaring the members of the class, and then the source file, defining the class members. I also implemented the optional methods, such as multiplying and dividing two fractions. Most of the implementation of these fractions were very simple, with method definitions often being single return statements with any arithmetic that has needed to be done in place of the parameters of the constructor.
+
+The fractions class uses two constructors, a default constructor of ```Fraction()```  which calls the parameter constructor 
+```c++
+Fraction(int num, int den)
+```
+This constructor then uses the mutators to assign values to the private members `m_num` and `m_den`. Any validation on these takes place in these mutators, such as ensuring that the denominator is not 0.
+
+For the read function chosen uses the input `"Num/Den"`. To convert this into a valid Fraction the method takes 3 reads in from the stream, the first assigns to the numerator, the second ensures that there is a `/` placed between the numerator and denominator, the final input reads the denominator.
+
+Once the method has taken the 3 reads from the stream the validity of the reads is checked, 
+
+``` c++
+	if (!sin || divSymbol != '/' || den == 0)
+	{
+		sin.setstate(std::ios::failbit); //Invalid input, do nothing to the fraction
+		return;
+	}
+```
+
+First the fail flag for the stream is read, if the stream has read unsuccessfully the internal block is instantly entered, preventing any issue with accessing the variables when they may be unitialised.
+If the stream did not fail, the validity of the input is checked, first to see if the divisor symbol was included, and then the value of the denominator is verified to ensure it is not equal to 0.
+
+We check the denominator here instead of letting the mutator do it as c++ convention is to not throw errors from a stream read/write and to instead set the failbit on the stream.
+
+
+### Q3. - Operators in Fraction
+
+**Question**
+
+Add the following functionality to your Fraction class:
+
+The ability to add two Fractions together using the class member operator operator+
+The ability to subtract one Fraction from another fraction using the class member operator operator-
+The ability to multiply a Fraction with an int using the class member operator operator*
+The ability to multiply an int with a Fraction using the auxiliary operator operator*
+
+**Solution**
+_Fraction.h_
+```c++
+#pragma once
+#include<iostream>
+
+class Fraction
+{
+public:
+	// default constructor
+
+	Fraction();
+	//Convert int to Frac
+
+	Fraction(int);
+	// specific constructor
+
+	Fraction(int num, int den);
+	// arithmetic facilitators
+	Fraction Add(const Fraction& rhs) const;
+	Fraction Subtract(const Fraction& rhs) const;
+	Fraction Multiply(const Fraction& rhs) const;
+	Fraction Divide(const Fraction& rhs) const;
+
+	Fraction Multiply(int scale) const;
+	Fraction Divide(int scale) const;
+	// getters/inspectors
+	int Num() const;
+	int Den() const;
+	// setters/mutators
+	void Num(int num);
+	void Den(int den);
+	// stream facilitators
+	std::ostream& Write(std::ostream& sout) const;
+	std::istream& Read(std::istream& sin);
+
+	// Mutating Operator Overload
+	inline Fraction& operator+= (const Fraction& rhs) { *this = Add(rhs); return *this; }
+	inline Fraction& operator+= (const int& rhs) { *this = Add(rhs); return *this; }
+
+	inline Fraction& operator-= (const Fraction& rhs) { *this = Subtract(rhs); return *this; }
+	inline Fraction& operator-= (const int& rhs) { *this = Subtract(rhs); return *this; }
+
+	inline Fraction& operator*= (const Fraction& rhs) { *this = Multiply(rhs); return *this; }
+	inline Fraction& operator*= (const int& rhs) { *this = Multiply(rhs); return *this; }
+
+	inline Fraction& operator/= (const int& rhs) { *this = Divide(rhs); return *this; }
+	inline Fraction& operator/= (const Fraction& rhs) { *this = Divide(rhs); return *this; }
+
+private:
+	// data members
+	int m_num;
+	int m_den;
+};
+
+//Auxillaries & Operator Overloads
+
+//Frac OP Frac
+inline Fraction operator+ (const Fraction& lhs, const Fraction& rhs) { return Fraction(lhs) += (rhs); }
+inline Fraction operator- (const Fraction& lhs, const Fraction& rhs) { return Fraction(lhs) -= (rhs); }
+inline Fraction operator* (const Fraction& lhs, const Fraction& rhs) { return Fraction(lhs) *= (rhs); }
+inline Fraction operator/ (const Fraction& lhs, const Fraction& rhs) { return Fraction(lhs) /= (rhs); }
+//Frac OP int
+inline Fraction operator+ (const Fraction& lhs, const int& rhs) { return Fraction(lhs) += (rhs); }
+inline Fraction operator- (const Fraction& lhs, const int& rhs) { return Fraction(lhs) -= (rhs); }
+inline Fraction operator* (const Fraction& lhs, const int& rhs) { return Fraction(lhs) *= (rhs); }
+inline Fraction operator/ (const Fraction& lhs, const int& rhs) { return Fraction(lhs) /= (rhs); }
+//int OP Frac
+inline Fraction operator+ (const int& lhs, const Fraction& rhs) { return Fraction(lhs) += (rhs); }
+inline Fraction operator- (const int& lhs, const Fraction& rhs) { return Fraction(lhs) -= (rhs); }
+inline Fraction operator* (const int& lhs, const Fraction& rhs) { return Fraction(lhs) *= (rhs); }
+inline Fraction operator/ (const int& lhs, const Fraction& rhs) { return Fraction(lhs) /= (rhs); }
+
+//Stream Read/Write
+inline std::ostream& operator<< (std::ostream& stream, const Fraction& rhs) { return rhs.Write(stream); }
+inline std::istream& operator>> (std::istream& stream, Fraction& rhs) { return rhs.Read(stream); }
+```
+
+_Fraction.cpp_
+```c++
+#include "Fraction.h"
+
+/// <summary>
+/// Default Fraction Constructor, Initialises to 0/1
+/// </summary>
+Fraction::Fraction() : Fraction(0, 1)
+{
+}
+
+/// <summary>
+/// Create a fraction from an integer
+/// </summary>
+/// <param name="num">Integer to convert to fraction</param>
+Fraction::Fraction(int num) : Fraction(num, 1)
+{
+}
+
+/// <summary>
+/// Create a fraction with provided params
+/// </summary>
+/// <param name="num">Fraction Numerator</param>
+/// <param name="den">Fraction Denominator</param>
+Fraction::Fraction(int num, int den)
+{
+	Num(num);
+	Den(den);
+}
+/// <summary>
+/// Add the provided fraction to the this fraction
+/// </summary>
+/// <param name="rhs">Fraction object to add</param>
+/// <returns>New Fraction with total value</returns>
+Fraction Fraction::Add(const Fraction& rhs) const
+{
+	return Fraction((m_num * rhs.Den() + rhs.Num() * m_den), (m_den * rhs.Den()));
+}
+/// <summary>
+/// Subtract the provided fraction from this fraction
+/// </summary>
+/// <param name="rhs">Fraction to subtract</param>
+/// <returns>New Fraction with total value</returns>
+Fraction Fraction::Subtract(const Fraction& rhs) const
+{
+	return Fraction((m_num * rhs.Den() - rhs.Num() * m_den), (m_den * rhs.Den()));
+}
+
+/// <summary>
+/// Multiply the current fraction by a provided fraction
+/// </summary>
+/// <param name="rhs">Multiplier fraction</param>
+/// <returns>New Fraction with total value</returns>
+Fraction Fraction::Multiply(const Fraction& rhs) const
+{
+	return Fraction((m_num * rhs.Num()), m_den * rhs.Den());
+}
+/// <summary>
+/// Divide the current fraction by a provided fraction
+/// </summary>
+/// <param name="rhs">Divisor Fraction</param>
+/// <returns>New Fraction with total value</returns>
+Fraction Fraction::Divide(const Fraction& rhs) const
+{
+	return Fraction(m_num * rhs.Den(), m_den * rhs.Num());
+}
+
+/// <summary>
+/// Multiply the current fraction by a provided scale
+/// </summary>
+/// <param name="scale">Scale to Multiply fraction by</param>
+/// <returns>New Fraction with total value</returns>
+Fraction Fraction::Multiply(int scale) const
+{
+	return Fraction(m_num * scale, m_den);
+}
+/// <summary>
+/// Divide the current fraction by a provided scale
+/// </summary>
+/// <param name="scale">Scale to divide fraction by</param>
+/// <returns>New Fraction with total value</returns>
+Fraction Fraction::Divide(int scale) const
+{
+	return Fraction(m_num, m_den * scale);
+}
+
+
+int Fraction::Num() const
+{
+	return m_num;
+}
+
+int Fraction::Den() const
+{
+	return m_den;
+}
+
+void Fraction::Num(int num)
+{
+	m_num = num;
+}
+
+void Fraction::Den(int den)
+{
+	if (den == 0) 
+	{
+		throw std::invalid_argument("Denominator cannot be set to 0!");
+	}
+	m_den = den;
+}
+
+std::ostream& Fraction::Write(std::ostream& sout) const
+{
+	sout << Num() << "/" << Den();
+	return sout;
+}
+/// <summary>
+/// Read a fraction from a stream in format "Num/Den"
+/// </summary>
+/// <param name="sin">stream input</param>
+std::istream& Fraction::Read(std::istream& sin)
+{
+	int num;
+	int den;
+	char divSymbol;
+
+	sin >> num;
+	sin >> divSymbol;
+	sin >> den;
+	//stream fail, no divisor symbol, denominator is 0
+	if (!sin || divSymbol != '/' || den == 0)
+	{
+		sin.setstate(std::ios::failbit); //Stream read fail, do nothing to the fraction
+		return sin;
+	}
+
+	m_num = num;
+	m_den = den; //don't use mutator as we have already verified den != 0 and it can throw an error
+
+	return sin;
+}
+
+
+
+```
+**Test Data**
+```c++
+    cout << "overload tests\n" << endl;
+
+    Fraction f5(2, 6);
+    Fraction f6(4, 5);
+
+    result = f1 + f2;     // 1/2 + 3/4 = 10/8
+    cout << "1/2 + 3/4 = " << result << endl;
+
+    result = f1 + 3;   //1/2 + 3 = 7/2
+    cout << "1/2 + 3 = " << result << endl;
+
+    result = 3 + f1;    //1/2 + 3 = 7/2
+    cout << "3 + 1/2 = " << result << endl;
+
+    f5 += f6;   //2/6 + 4/5 = 34/30
+    cout << "2/6 += 4/5, f5 = " << f5 << endl;
+    f5 = Fraction(2, 6);
+
+    result = f2 - f1;     // 3/4 - 1/2 = 2/8
+    cout << "3/4 - 1/2 = " << result << endl;
+
+    result = f1 - 1;    // 1/2 - 1 = -1/2
+    cout << "1/2 - 1 = " << result << endl;
+
+    result = 2 - f2;    // 2 - 3/4 = 5/4
+    cout << "2 - 3/4 = " << result << endl;
+
+    result = f1 * f2;   //1/2 * 3/4 = 3/8
+    cout << "1/2 * 3/4 = " << result << endl;
+
+    result = f2 * 3;      // 3/4 * 3 = 9/4
+    cout << "3/4 * 3 = " << result << endl;
+
+    result = 3 * f2;      // 3/4 * 3 = 9/4
+    cout << "3 * 3/4 = " << result << endl;
+
+    result = f1 / f2;   // 1/2 / 3/4 = 4/6
+    cout << "1/2 / 3/4 = " << result << endl;
+
+    result = f1 / 2;    // 1/2 / 2 = 1/4
+    cout << "1/2 / 2 = " << result << endl;
+
+    result = 3 / f1;    // 3 / 1/2 = 6/1
+    cout << "3 / 1/2 = " << result << endl;
+
+    Fraction f4;
+    cin >> f4;            // input format is up to you, e.g. "1/2" to represent 1/2
+    cout << "Read = " << f4 << endl;
+
+    system("pause");
+```
+
+**Output**
+
+<img width="346" height="357" alt="image" src="https://github.com/user-attachments/assets/699116ba-1331-4b76-8f76-4421a7d760bb" />
+
+
+**Reflection**
+
+In this task I have implemented operator overloads such as seen in Q1. To implement these overloads i used the functions that I had defined in Q2 for using mathematical operators on Fractions.
+```
+Guidelines: Method or Auxiliary Function?
+1. Virtual functions must be member methods
+2. Both operator>> and operator<< must be auxiliary functions
+3. If data conversion is required on the left hand side of the operator, must
+use an auxiliary function
+4. If operator overloading, then the preference is to use an inline auxiliary
+function
+5. Otherwise use a member method
+```
+
+Following these guidelines from the Lecture ```500083 ZM Week 5``` I implemented the operator overloads as inline auxiliary functions.
+I ensured the consistency of operators by implementing `+, -, *, /` in terms of `+=, -=, *=, /=*`. 
+
+```c++
+	inline Fraction& operator+= (const Fraction& rhs) { *this = Add(rhs); return *this; }
+```
+To do this I declared the compound assignment operators in the class as member methods, this is required as these methods mutate the object that they were called on. The overloads require the use of the `this` pointer, the pointer is dereferenced and has value updated to the return value of the Add method before returning a reference to the object at `*this` which we have just updated.
+
+I have implemented the overloads to work with integers as well as other fractions and ensured that there is parity between the operations, for instance ```Fraction(1,2) + 2``` and ```2 + Fraction(1,2)``` are both valid.
+
+
+```c++
+//Frac OP Frac
+inline Fraction operator+ (const Fraction& lhs, const Fraction& rhs) { return Fraction(lhs) += (rhs); }
+inline Fraction operator- (const Fraction& lhs, const Fraction& rhs) { return Fraction(lhs) -= (rhs); }
+inline Fraction operator* (const Fraction& lhs, const Fraction& rhs) { return Fraction(lhs) *= (rhs); }
+inline Fraction operator/ (const Fraction& lhs, const Fraction& rhs) { return Fraction(lhs) /= (rhs); }
+//Frac OP int
+inline Fraction operator+ (const Fraction& lhs, const int& rhs) { return Fraction(lhs) += (rhs); }
+inline Fraction operator- (const Fraction& lhs, const int& rhs) { return Fraction(lhs) -= (rhs); }
+inline Fraction operator* (const Fraction& lhs, const int& rhs) { return Fraction(lhs) *= (rhs); }
+inline Fraction operator/ (const Fraction& lhs, const int& rhs) { return Fraction(lhs) /= (rhs); }
+//int OP Frac
+inline Fraction operator+ (const int& lhs, const Fraction& rhs) { return Fraction(lhs) += (rhs); }
+inline Fraction operator- (const int& lhs, const Fraction& rhs) { return Fraction(lhs) -= (rhs); }
+inline Fraction operator* (const int& lhs, const Fraction& rhs) { return Fraction(lhs) *= (rhs); }
+inline Fraction operator/ (const int& lhs, const Fraction& rhs) { return Fraction(lhs) /= (rhs); }
+```
+
+To do this i provide overloads for each situation involving the datatypes. 
+When ```Frac OP int``` is called, the operator overload itself is overloaded (to the method taking an integer instead of a fraction) and the arithmetic facilitator for that operation with a whole number is called 
+
+When ```int OP Frac``` is called, the integer is converted to a fraction and before being passed to the appropriate member method.
+
+
+### Q4. Parameters
+
+**Question**
+
+Copy your code for pass-by-value and pass-by-ref into your lab book. Reflect on the difference between them
+
+**Solution**
+
+
+**Reflection**
+Pass by value
+
+<img width="1405" height="555" alt="image" src="https://github.com/user-attachments/assets/0431b06c-548a-4e04-8d8b-1139627d1b53" />
+
+Value of a and b are pushed onto the stack, the method `swap(a, b)` is then called.
+
+<img width="436" height="187" alt="image" src="https://github.com/user-attachments/assets/68d85c28-80db-48be-93f2-eabb25cc9551" />
+
+As discussed in previous labs, once inside the function, the stack is prepared for the function.
+
+the base pointer of the caller is pushed onto the stack as it is not mutable, the caller expects it to be the same when the method exits.
+
+Then the stack pointer is moved to ebp to create a new stack frame, then the stack is extended downwards by subtracting a number of bytes (`0xCCh` (204)) in this case from the stack pointer.
