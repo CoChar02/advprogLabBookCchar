@@ -2423,19 +2423,39 @@ When ```int OP Frac``` is called, the integer is converted to a fraction and bef
 Copy your code for pass-by-value and pass-by-ref into your lab book. Reflect on the difference between them
 
 **Solution**
+```c++
+//By value
+
+void myswap(int lhs, int rhs) {
+	int temp = lhs;
+	lhs = rhs;
+	rhs = temp;
+}
+
+//By reference
+void myswap(int& lhs, int& rhs) {
+	int temp = lhs;
+	lhs = rhs;
+	rhs = temp;
+}
+
+//By address
+void myswap(int* lhs, int* rhs) {
+	int temp = lhs;
+	lhs = rhs;
+	rhs = temp;
+}
 
 
 **Reflection**
 Pass by value
 
-<img width="1405" height="555" alt="image" src="https://github.com/user-attachments/assets/0431b06c-548a-4e04-8d8b-1139627d1b53" />
+<img width="1400" height="801" alt="image" src="https://github.com/user-attachments/assets/4c8abb57-0d26-4393-88ee-4fda5f5d89a6" />
 
-Value of a and b are pushed onto the stack, the method `swap(a, b)` is then called.
+Value of a and b are pushed onto the stack (highlighted in pink), the method `swap(a, b)` is then called which pushes the return address to the stack (`0x00e126a4h`, highlighted in orange).
+the base pointer is then pushed to the stack (highlighted in blue, `0x007afe6ch`) as the calling function expects this value to be the same when the function returns.
 
-<img width="436" height="187" alt="image" src="https://github.com/user-attachments/assets/68d85c28-80db-48be-93f2-eabb25cc9551" />
+<img width="1392" height="859" alt="image" src="https://github.com/user-attachments/assets/c614c8ee-0c1e-49cd-9b28-7dd0fe8ad3b5" />
 
-As discussed in previous labs, once inside the function, the stack is prepared for the function.
+ESP is then pushed to the base pointer so it can be used to keep track of the methods variables. `0xCCh` (204 bytes) is then subtracted from the stack pointer to define the local variable space. 
 
-the base pointer of the caller is pushed onto the stack as it is not mutable, the caller expects it to be the same when the method exits.
-
-Then the stack pointer is moved to ebp to create a new stack frame, then the stack is extended downwards by subtracting a number of bytes (`0xCCh` (204)) in this case from the stack pointer.
