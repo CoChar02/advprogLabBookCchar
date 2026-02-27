@@ -2441,11 +2441,11 @@ void myswap(int& lhs, int& rhs) {
 
 //By address
 void myswap(int* lhs, int* rhs) {
-	int temp = lhs;
-	lhs = rhs;
-	rhs = temp;
+	int temp = *lhs;
+	*lhs = *rhs;
+	*rhs = temp;
 }
-
+```
 
 **Reflection**
 Pass by value
@@ -2457,5 +2457,70 @@ the base pointer is then pushed to the stack (highlighted in blue, `0x007afe6ch`
 
 <img width="1392" height="859" alt="image" src="https://github.com/user-attachments/assets/c614c8ee-0c1e-49cd-9b28-7dd0fe8ad3b5" />
 
-ESP is then pushed to the base pointer so it can be used to keep track of the methods variables. `0xCCh` (204 bytes) is then subtracted from the stack pointer to define the local variable space. 
+`ESP` is then pushed to the base pointer so it can be used to keep track of the methods variables. `0xCCh` (204 bytes) is then subtracted from the stack pointer to define the local variable space. `EBX` (purple), `ESI`(blue), `EDI` (red) are then pushed to the stack just outside of the local variable space, saving their values so that they can be retrieved when the method returns. The debugger then moves an address in the local variable space (using a 12 byte offset from the ebp [ebp -(0xCh)]) to the EDI register and uses a loop to fill some of the variable space with `cc` to assist with debugging.
+
+<img width="1395" height="381" alt="image" src="https://github.com/user-attachments/assets/82a4fe3a-f261-4bc9-9151-9c7211c8f550" />
+
+Temp on the stack, stored in the defined variable space.
+
+<img width="1405" height="725" alt="image" src="https://github.com/user-attachments/assets/95edd21b-79f8-4a48-a4ea-b155decc36dd" />
+
+When lhs = rhs has been run
+
+<img width="1405" height="669" alt="image" src="https://github.com/user-attachments/assets/0f794e32-2cb6-4dfa-9971-b9067388bdfe" />
+
+When rhs = temp has been run, as we can see their values have been swapped.
+
+<img width="1406" height="628" alt="image" src="https://github.com/user-attachments/assets/5e48b505-a459-41d6-8a6e-f73bdb853901" />
+
+The function then restores the register values and pops them from the stack before moving ESP forward by the original local variable space size (`0xCCH`), the original ebp value is restored and the function returns. After the function returns ESP is increased by 8 to account for the two 4 byte integers that were pushed to the stack (intial values of variables lhs and rhs). As shown in the above screenshot (purple highlights), the original value of `a` and `b` have not been altered and still reside on the stack in order b, a as they are pushed by order of declaration rather than in reverse like how function parameters are pushed.
+
+
+Pass by reference
+
+<img width="1401" height="707" alt="image" src="https://github.com/user-attachments/assets/328064e5-314e-4f06-993a-151013c722d0" />
+
+This time the memory addresses of a and b are pushed to the stack instead of their values, the highlighted memory addresses can be verified to be the same as the values pushed through counting their offset on the stack row, ex: B is on the row beginning with `0x010FFADB` and has an offset of `37 bytes (0x25h)` giving it an address of `0x010FFADB` which is the same as was pushed to the stack for the method call!
+
+The method then initialises the same way
+
+To assign a value to temp now, some new actions have to be taken,
+```
+	int temp = lhs;
+007F25B6  mov         eax,dword ptr [lhs]  
+007F25B9  mov         ecx,dword ptr [eax]  
+007F25BB  mov         dword ptr [temp],ecx 
+```
+
+The value of the lhs variable is moved to the `eax` register. Then `eax` is dereferenced, moving the value at the address pointed to by the lhs variable to the `ecx` register. `ecx` is then moved to the temp variable.
+
+```
+	lhs = rhs;
+007F25BE  mov         eax,dword ptr [lhs]  
+007F25C1  mov         ecx,dword ptr [rhs]  
+007F25C4  mov         edx,dword ptr [ecx]  
+007F25C6  mov         dword ptr [eax],edx
+```
+
+Similarly when `lhs = rhs` is executed, the value of the lhs variable is placed into `eax` and the value of the rhs variable is placed into `ecx`.
+A third register now temporarily stores the dereferenced value of the `ecx` register, the value at the address pointed at by rhs.
+Finally the value of the edx register is moved to the dereferenced value of the `eax` register, the address pointed at by lhs.
+
+`rhs = temp` 
+
+then excutes, similiarly to how `temp = lhs` did, storing the value of rhs into the `eax` register, temp into the `ecx` register. The value at the ecx register is then moved to the dereferenced value of the eax register (address pointed to by rhs)
+
+thus completing the swap.
+
+Finally when the method exits, the non-volatile values are restored as with the return by value method;
+
+<img width="1408" height="522" alt="image" src="https://github.com/user-attachments/assets/9cb33b88-a3af-4dd6-acc4-e26ddf3f3c25" />
+
+
+<img width="954" height="169" alt="image" src="https://github.com/user-attachments/assets/fd71b0b1-17d2-4941-9509-1d5feae7b89d" />
+
+As we can see the values of a and b have successfully swapped (00 00 00 0a now resides where 00 00 00 14 was and vice versa).
+
+### Q5. Return by value
+
 
