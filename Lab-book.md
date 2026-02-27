@@ -1571,3 +1571,245 @@ Implement the above pointer chain
 
 <img width="676" height="270" alt="image" src="https://github.com/user-attachments/assets/bca266fa-90c0-4e80-aba0-622682fd041e" />
 
+
+## Week 5 - Lab E
+
+### Q1. Operators in Grid
+
+**Question**
+
+Extend your code from Q2 and Q3 in Lab D.
+
+Add the following functionality to your program:
+
+The ability to write the Grid to an ostream using the auxiliary `operator<<`
+The ability to read in the values from an istream into the Grid using the auxiliary `operator>>`
+
+
+
+**Solution**
+
+_grid.h_
+```c++
+#pragma once
+#include <iostream>
+
+class Grid
+{
+public:
+	Grid();
+	~Grid();
+
+	void LoadGrid(const char filename[]);
+	void SaveGrid(const char filename[]);
+
+	friend std::ostream& operator<<(std::ostream&, const Grid&);
+	friend std::istream& operator>>(std::istream&, Grid& g);
+
+private:
+	//Initialise member variables
+	int m_grid[9][9] = {}; //Initialises to 0s
+	int gridYSize = 0;
+	int gridXSize = 0;
+};
+
+std::ostream& operator<<(std::ostream& stream, const Grid& g);
+std::istream& operator>>(std::istream& stream, Grid& g);
+```
+
+_grid.cpp_
+```c++
+
+#include "Grid.h"
+#include <iostream>
+#include <fstream>
+using namespace std;
+
+/*References
+W3Schools (2026) C++ Array Size [Source code]. https://www.w3schools.com/cpp/cpp_arrays_size.asp [Accessed 25 Feb 2026].
+*/
+
+/// <summary>
+/// Grid constructor, calculates Grid Y and Grid X size using the sizeof m_grid
+/// </summary>
+Grid::Grid()
+{
+	gridYSize = sizeof(m_grid) / sizeof(m_grid[0]);
+	gridXSize = sizeof(m_grid[0]) / sizeof(m_grid[0][0]);
+}
+
+Grid::~Grid()
+{
+}
+
+//Create an input file stream from filename
+//for each y value from 0 to 8 inclusive
+//{
+//   for each x value from 0 to 8 inclusive
+//   {
+//      store next value from the input file stream into grid at x,y
+//   }
+//}
+//Close input file stream
+
+
+void Grid::LoadGrid(const char filename[])
+{
+	ifstream inputStream(filename); //Create input file stream
+	if (inputStream.fail())
+	{ //Check input file was successfully opened.
+		cout << "Error Opening File, check file " << filename << " exists and has correct permissions." << endl;
+		inputStream.close();
+		return;
+	}
+
+	//'this' is a pointer to the Grid object, deference it and pass to the method
+	inputStream >> *this;
+
+	//Close input file stream
+	inputStream.close();
+}
+
+void Grid::SaveGrid(const char filename[])
+{
+	ofstream outputStream(filename, ios::out); //Open in write/overwrite mode
+	if (!outputStream.is_open()) //Check file was able to be opened
+	{
+		outputStream.close();
+		cout << "Error creating or opening output file." << endl;
+		return;
+	}
+
+	outputStream << *this;
+
+	outputStream.close();
+}
+
+
+std::ostream& operator<<(std::ostream& stream, const Grid& g)
+{
+	for (int y = 0; y < g.gridYSize; y++)
+	{
+		for (int x = 0; x < g.gridXSize; x++) 
+		{
+			stream << g.m_grid[y][x]; //Write value to file
+			if (x == g.gridXSize - 1) //If last value on the row
+			{
+				stream << '\n'; //insert end of line
+			}
+			else
+			{
+				stream << ' '; //else add whitespace
+			}
+		}
+	}
+	return stream;
+}
+
+
+std::istream& operator>>(std::istream& stream, Grid& g)
+{
+	for (int y = 0; y < g.gridYSize; y++) //for each y value (every row in the grid)
+	{
+		for (int x = 0; x < g.gridXSize; x++) // for each x value (every column in the grid)
+		{
+			int value;
+			if (!(stream >> value)) //Read next value from file, if this fails ran out of integers in the file, or encountered a non-integer value.
+			{
+				return stream;
+			}
+			g.m_grid[y][x] = value; //Set value in the grid to the read value
+		}
+	}
+	return stream;
+}
+```
+
+**Test Data**
+
+```c++
+#include <iostream>
+#include "Grid.h"
+using namespace std;
+
+int main(int argn, char* argv[])
+{
+	Grid grid;
+	grid.LoadGrid("Grid1.txt");
+	grid.SaveGrid("OutGrid.txt");
+
+
+	cout << grid;
+}
+```
+
+_grid1.txt_
+```
+1 2 3 4 5 6 7 8 9
+2 3 4 5 6 7 8 9 1
+3 4 5 6 7 8 9 1 2
+4 5 6 7 8 9 1 2 3
+5 6 7 8 9 1 2 3 4
+6 7 8 9 1 2 3 4 5
+7 8 9 1 2 3 4 5 6
+8 9 1 2 3 4 5 6 7
+9 1 2 3 4 5 6 7 8
+```
+
+
+**Output**
+<img width="1089" height="331" alt="image" src="https://github.com/user-attachments/assets/29a7c163-1552-46a4-8c87-d562537d8a8d" />
+
+
+<img width="583" height="321" alt="image" src="https://github.com/user-attachments/assets/365d8c94-87e0-4b6d-91f4-02816f94b3e7" />
+
+
+**Reflection**
+
+In this task I have extended my work from the previous lab to include reading and writing the grid into a stream with the auxillary `<< and >>` operators. To do this I assigned the operator override functions as `friends` of the grid class, this allowed them to access private or protected data variables (like `m_grid`) of the grid class. While I could have exposed the grid with a public getter, I believed using the friend modifier to be pertinent as the stream read and write operations should happen as quickly as possible and the read/write operations will be making many calls to the getter, which may negatively impact performance. The Grid was passed by reference to the stream operators as we do not want to copy it in memory when calling these operators, the output stream operator also uses a constant for the grid as it should never change when writing to the ostream.
+
+After defining the overloaded operators as friends and then outside of the class in the headerfile, in the source file I added the operator functionality.
+
+Using my work from Lab-D, I moved the read and write loop functionality into the new operator functions switching each filestream for the paramater provided `stream`, this allows these operators to be used in any stream type that implements the istream or ostream functionality, such as writing to the console, or to a file.
+
+Finally, I updated the methods that read and write the grid to a file, swapping the loops for the newly implemented operator overloads, since these methods will be called from within the object itself, pass to the stream by dereferencing the fundamental `this` pointer, passing a reference to the current grid object to the stream operators.
+
+
+```c++
+...
+	//'this' is a pointer to the Grid object, deference it and pass to the method
+	inputStream >> *this;
+...
+
+
+	outputStream << *this;
+
+```
+
+### Q2. Fractions
+
+**Question**
+
+Open the Fractions project
+
+Implement the Fraction class that you have seen in lectures. Use the header file example that was presented in lectures to define your class, methods, member variables etc.
+
+Methods will include:
+
+Constructors
+Add Fraction (see equation 1 for help)
+Subtract Fraction
+Multiply by int
+Multiply with Fraction (optional)
+Divide by int (optional)
+Divide by Fraction (optional)
+Inspector (getter) for the Numerator
+Inspector (getter) for the Denominator
+Mutator (setter) for the Numerator
+Mutator (setter) for the Denominator
+Write
+Read
+
+**Solution**
+
+
