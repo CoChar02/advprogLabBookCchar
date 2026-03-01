@@ -2580,6 +2580,8 @@ int& clampRef(int& value, int low, int high) {
 
 **Reflection**
 
+--Return by value--
+
 The method intitialises in the same way as explored in Question 4, the values of the method are pushed to the stack. The program then makes comparisons using the `eax` register and the passed parameter. 
 
 ```
@@ -2601,6 +2603,93 @@ The method intitialises in the same way as explored in Question 4, the values of
 0004243C  mov         eax,dword ptr [value]  
 ```
 
-<img width="1185" height="659" alt="image" src="https://github.com/user-attachments/assets/3191a8d4-37f3-411e-af30-c675869c607f" />
 
-To make the comparison `(if value < low)` the value of the `[value]` variable is moved to the eax register. The register then performs a comparison by subtracting the right variable from the left, in this case the value of [`low`] is subtracted from the value of the eax register (value). As seen in the above screenshot, this sets the `EFL = 00000206`. EFL is a register used to the CPU to track flags. 
+<img width="1164" height="634" alt="image" src="https://github.com/user-attachments/assets/6d7700a5-36c1-4046-b087-336e3c87fd49" />
+
+To make the comparison `if(value > high)` the value of the `[value]` variable is moved to the eax register. The register then performs a comparison by subtracting the right variable from the left, in this case the value of [`high`] is subtracted from the value of the eax register (value). 
+
+| Flag | VS |
+| -------- | ------- |
+| Overflow | OV |
+| Direction | UP |
+| Interrupt | EI |
+| Sign | PL |
+| Zero | ZR |
+| Auxiliary Carry | AC |
+| Parity | PE |
+| Carry | CY |
+
+As seen in the above screenshot, when the program makes this comparison it sets the EFL register using the value of the comparison. For example in the above screenshot we can see that the `Zero Flag (ZR) = 0` meaning the result was not 0, we can also see that the `Carry Flag (CY)` has been set to 1, which indicates that the value of the right hand side of the comparison (in this case 30), was higher than the left side of the comparison (in this case 10). We can also see that the `Sign Flag (PL) ` = 1 indicating that the result of the comparison was a negative number.
+
+The next instruction (`00E92435  jle         __$EncStackInitStart+30h (0E9243Ch)`) indicates to jump to the instruction at `0E9243Ch` if the right hand side of the comparison was less than or equal to the left hand side. In this case this represents jumping to the line
+
+```
+	return value;
+00E9243C  mov         eax,dword ptr [value]
+```
+When the value of `[high]` is less than the value of `[value]`,  fulfilling the if condition.
+
+To return, the value at `[value]` is stored in the `[eax]` register and the method completes its end of method procedure including setting registers back to expected values and reseting the stack and base pointers.
+Once back in the calling function, the value of eax is moved to esi 
+`00E92984  mov         esi,eax `
+
+This is for temporary storage while the program executes the second clamp method.
+
+<img width="357" height="41" alt="image" src="https://github.com/user-attachments/assets/9f319f78-1ead-4baa-8e12-494812f09f86" />
+
+The second clamp method then executes the same as the first, with the value returning using the `eax` register. Once the method completes the method moves adds the `esi` and `eax` registers together (to fulfil that `result1 = clamp1 + clamp2`). This value is then moved to the `result1` variable.
+
+Result 2 executes exactly the same way, but with a comparison for `if (value > high)` being true, when this occurs the value of `high` is moved to the eax register instead of `value`, the function then jumps to the end of function to reset relevant registers.
+
+--Return by reference--
+
+Result 2 had a different value than expected when we returned by reference so we will investigate that.
+
+<img width="1406" height="652" alt="image" src="https://github.com/user-attachments/assets/daecb9e5-af43-4c68-a28d-9fb2903b5296" />
+
+Address of value1 is pushed to the stack instead of its value as expected, `00 fa fb c4` corresponds to the address of `value1`
+
+```
+	if (value < low)
+00E92492  mov         eax,dword ptr [value]  
+00E92495  mov         ecx,dword ptr [eax]  
+00E92497  cmp         ecx,dword ptr [low]  
+00E9249A  jge         __$EncStackInitStart+25h (0E924A1h)
+```
+
+<img width="1177" height="473" alt="image" src="https://github.com/user-attachments/assets/529cdeb6-45bd-4abb-b0c1-7f6081454808" />
+
+
+To make a comparison the address at the value variable is moved to the EAX register, the ECX register then stores the value of the address in `[eax]` by derefencing it. The comparison is then made the same as explored above. As shown in the screenshot above, `eax` has the value of `EAX = 00FAFBC4` which is `value1`s address and `ECX` has a value of `ECX = 0000000A` (10).
+
+```
+		return high;
+00E924AB  lea         eax,[high]  
+00E924AE  jmp         __$EncStackInitStart+37h (0E924B3h)
+```
+
+When if(value > high) evaluates, the result is true so the program enters this block. This moves the address of the [high] variable to the `eax` register then performs the function return procedures.
+
+Let's bear in mind that the return _value_ here is 5.
+
+<img width="1170" height="517" alt="image" src="https://github.com/user-attachments/assets/737924ad-6ae6-40ce-a7bc-e86e0fb4508c" />
+
+The return value of `eax` is stored into the `esi` register again.
+
+<img width="1399" height="665" alt="image" src="https://github.com/user-attachments/assets/2e046588-2146-4037-a320-edb34fd816d7" />
+
+The register stored in `ESI` (`00FAFACC`) (highlighted in pink) is pointing at the memory address of `[high]`, however we have since gone out of scope of this variable and the data is sitting outside of our current stack frame, in front of the stack pointer.
+
+<img width="1397" height="554" alt="image" src="https://github.com/user-attachments/assets/2eda93cc-f129-4df1-96e4-a6fa05741181" />
+
+Taking a step forward we can see that as the program beings to execute the second clamp function, it pushes the new `[high]` value to the stack, this value is at the same place as our original and overwrites the `00 00 00 05` for `00 00 00 0a`.
+
+The program then executes as above, loading the address of `[high]` into the `eax` register before returning.
+
+<img width="1160" height="549" alt="image" src="https://github.com/user-attachments/assets/44b30e45-776d-489c-a4a3-eb57b66efb3a" />
+
+`EDX` then stores the value at the address of `ESI`, which from the first method we would expect to be 5.
+
+<img width="1156" height="538" alt="image" src="https://github.com/user-attachments/assets/46a7118f-c839-4358-8984-18ed06b21558" />
+
+As we can see, EDX is storing the `00 00 00 0a` which was written at the same memory location as our original value for [high]. Our method returned a reference to an address that went out of scope and did not exist in the calling function, this causes inpredictable behaviour, such as in our case where the value of `value2` is 20 because the same memory address is being accessed twice in order to make the calculation.
