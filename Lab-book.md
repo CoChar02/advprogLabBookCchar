@@ -2074,7 +2074,7 @@ If the stream did not fail, the validity of the input is checked, first to see i
 We check the denominator here instead of letting the mutator do it as c++ convention is to not throw errors from a stream read/write and to instead set the failbit on the stream.
 
 
-### Q3. - Operators in Fraction
+### Q3. Operators in Fraction
 
 **Question**
 
