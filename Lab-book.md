@@ -2521,6 +2521,86 @@ Finally when the method exits, the non-volatile values are restored as with the 
 
 As we can see the values of a and b have successfully swapped (00 00 00 0a now resides where 00 00 00 14 was and vice versa).
 
+
 ### Q5. Return by value
 
+**Question** 
 
+Copy your code for return-by-value and return-by-ref into your lab book. Reflect on the difference between them
+
+**Solution**
+
+```c++
+//By Value
+int clamp(int value, int low, int high) {
+	if (value < low)
+		return low;
+	if (value > high)
+		return high;
+	return value;
+}
+//By Address
+int& clampRef(int& value, int low, int high) {
+	if (value < low)
+		return low;
+	if (value > high)
+		return high;
+	return value;
+}
+
+..
+
+	cout << "\nReturn by value" << endl;
+
+	int value1 = 10;
+	int value2 = 20;
+	int result1 = clamp(value1, 0, 30) + clamp(value2, 0, 30);
+
+	cout << "result1 = " << result1 << endl;
+
+	int result2 = clamp(value1, 0, 5) + clamp(value2, 0, 10);
+	cout << "result2 = " << result2 << endl;
+
+	cout << "\nReturn by reference" << endl;
+
+	value1 = 10;
+	value2 = 20;
+	result1 = clampRef(value1, 0, 30) + clampRef(value2, 0, 30);
+
+	cout << "result1 = " << result1 << endl;
+
+	result2 = clampRef(value1, 0, 5) + clampRef(value2, 0, 10);
+	cout << "result2 = " << result2 << endl;
+```
+
+**Output**
+
+<img width="360" height="253" alt="image" src="https://github.com/user-attachments/assets/f8345512-38eb-4273-b0ff-47c1ca0b6d5f" />
+
+
+**Reflection**
+
+The method intitialises in the same way as explored in Question 4, the values of the method are pushed to the stack. The program then makes comparisons using the `eax` register and the passed parameter. 
+
+```
+	if (value < low)
+00042422  mov         eax,dword ptr [value]  
+00042425  cmp         eax,dword ptr [low]  
+00042428  jge         __$EncStackInitStart+23h (04242Fh)  
+		return low;
+0004242A  mov         eax,dword ptr [low]  
+0004242D  jmp         __$EncStackInitStart+33h (04243Fh)  
+	if (value > high)
+0004242F  mov         eax,dword ptr [value]  
+00042432  cmp         eax,dword ptr [high]  
+00042435  jle         __$EncStackInitStart+30h (04243Ch)  
+		return high;
+00042437  mov         eax,dword ptr [high]  
+0004243A  jmp         __$EncStackInitStart+33h (04243Fh)  
+	return value;
+0004243C  mov         eax,dword ptr [value]  
+```
+
+<img width="1185" height="659" alt="image" src="https://github.com/user-attachments/assets/3191a8d4-37f3-411e-af30-c675869c607f" />
+
+To make the comparison `(if value < low)` the value of the `[value]` variable is moved to the eax register. The register then performs a comparison by subtracting the right variable from the left, in this case the value of [`low`] is subtracted from the value of the eax register (value). As seen in the above screenshot, this sets the `EFL = 00000206`. EFL is a register used to the CPU to track flags. 
