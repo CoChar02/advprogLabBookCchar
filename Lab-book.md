@@ -2480,7 +2480,7 @@ Pass by reference
 
 <img width="1401" height="707" alt="image" src="https://github.com/user-attachments/assets/328064e5-314e-4f06-993a-151013c722d0" />
 
-This time the memory addresses of a and b are pushed to the stack instead of their values, the highlighted memory addresses can be verified to be the same as the values pushed through counting their offset on the stack row, ex: B is on the row beginning with `0x010FFADB` and has an offset of `37 bytes (0x25h)` giving it an address of `0x010FFADB` which is the same as was pushed to the stack for the method call!
+This time the memory addresses of a and b are pushed to the stack instead of their values, the highlighted memory addresses can be verified to be the same as the values pushed through counting their offset on the stack row, ex: B is on the row beginning with `0x010FFADB` and has an offset of `37 bytes (0x25h)` giving it an address of `0x010FFB00` which is the same as was pushed to the stack for the method call!
 
 The method then initialises the same way
 
