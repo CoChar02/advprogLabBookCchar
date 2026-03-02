@@ -2692,4 +2692,4 @@ The program then executes as above, loading the address of `[high]` into the `ea
 
 <img width="1156" height="538" alt="image" src="https://github.com/user-attachments/assets/46a7118f-c839-4358-8984-18ed06b21558" />
 
-As we can see, EDX is storing the `00 00 00 0a` which was written at the same memory location as our original value for [high]. Our method returned a reference to an address that went out of scope and did not exist in the calling function, this causes inpredictable behaviour, such as in our case where the value of `value2` is 20 because the same memory address is being accessed twice in order to make the calculation.
+As we can see, EDX is storing the `00 00 00 0a` which was written at the same memory location as our original value for [high]. Our method returned a reference to an address that went out of scope and did not exist in the calling function, this causes unpredictable behaviour, such as in our case where the value of `value2` is 20 because the same memory address is being accessed twice in order to make the calculation.
