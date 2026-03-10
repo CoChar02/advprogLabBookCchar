@@ -2802,3 +2802,165 @@ private:
 **Output**
 
 <img width="536" height="278" alt="image" src="https://github.com/user-attachments/assets/7844a6b1-ff4f-4eb7-9883-a4457dbd9e75" />
+
+### Q2. Template Grid (floats)
+
+**Question**
+
+Change the code in main() so that you can store float values instead of int values, i.e. Grid<float> grid
+
+Run your code and step through the LoadGrid() method and you should see that the numbers are being stored as float values instead of int values. The output file may still look like int values, because the streaming operator<< is doing a conversion.
+
+Change some of the values in the Grid1.txt to floating point values and you should see the output is now correct.
+
+**Solution**
+
+```c++
+#include <iostream>
+#include "grid.h"
+using namespace std;
+
+int main (int, char**) {
+	Grid<float> grid;
+	grid.LoadGrid("Grid1.txt");
+	grid.SaveGrid("OutGrid.txt");
+
+	return 0;
+}
+```
+**Input**
+```
+1.3 2 3 4.6 5.1 6 7 8 9
+2 3 4.5 5 6 7 8 9 1
+3 4 5 6 7.99 8 9 1.5 2
+4 5 6.12 7 8.44 9 1.666 2 3
+5 6 7 8 9 1 2 3 4
+6 7 8 9 1 2 3 4.99 5
+7 8 9 1 2 3 4 5 6
+8 9 1 2 3 4 5 6.67 7
+9 1 2 3 4 5 6.1012 7 8
+```
+
+**Output**
+
+<img width="359" height="254" alt="image" src="https://github.com/user-attachments/assets/522a62d3-9ca4-4026-a979-460193baa656" />
+**Reflection**
+
+<img width="1409" height="828" alt="image" src="https://github.com/user-attachments/assets/3cc69eaf-9b2f-4bd4-8742-7225ef9a54c1" />
+After the first layer of the grid has been read, we can see that the grid values are being read into the array as 4 byte floats instead of integers, the first value '66 66 a6 3f' when accounting for little endian encoding ('3fa66666') is equivalent to 1.3 in decimal. As shown in the output, the methods created in the previous labs still work with the Template grid, even across different data types.
+
+<img width="888" height="275" alt="image" src="https://github.com/user-attachments/assets/4e8c45b9-7607-4de2-8cd5-b3c11b481cd9" />
+
+### Q3. Binary search
+
+**Question**
+In this exercise, you'll implement two versions of a binary search, one using iteration, the other using a recursive function.
+
+The text file (binarysearchIn.txt) contains 100 integers, ordered from small to large.
+
+Create a 100 element 1D array and read the numbers from the file into the array, using the streaming operators.
+
+Check the array within the debugger to ensure that your input code is functioning correctly.
+
+A binary search algorithm tests a candidate value against the value stored in the middle of the array. If the candidate is smaller, the process is repeated on the lower half of the array. If the candidate is larger, the process is repeated on the upper half of the array. The process is repeated until either the middle of the sub-array contains the candidate value (the candidate is found), or the sub-array contains only a single value which is not equal to the candidate value (the candidate is not in the array).
+
+Implement this process using a recursive function, with the following prototype
+```c++
+bool binarySearch(int *list, int size, int value);
+```
+Now create a second implementation, replacing the recursive function with a single while loop
+
+Which implementation do you prefer, in terms of both readability and design intent?
+
+**Solution**
+```c++
+#include <iostream>
+#include <fstream>
+using namespace std;
+const int arraySize = 100;
+
+void loadFromFile(int array[], const char filename[])
+{
+	ifstream inputStream(filename); //Create input file stream
+	if (inputStream.fail())
+	{ //Check input file was successfully opened.
+		cout << "Error Opening File, check file " << filename << " exists and has correct permissions." << endl;
+		inputStream.close();
+		return;
+	}
+
+	for (int i = 0; i < arraySize; i++)
+	{
+		inputStream >> array[i];
+	}
+
+	//Close input file stream
+	inputStream.close();
+}
+
+
+int binarySearchRecursive(int target, int array[], int high, int low) 
+{
+	if (high < low) 
+	{
+		return -1; //Not in array
+	}
+	int middle = (high + low) / 2; //Goto middle of array segment
+
+	if (array[middle] == target) 
+	{
+		return middle; //Return index of middle value
+	}
+	else if (array[middle] > target) 
+	{
+		return binarySearchRecursive(target, array, middle - 1, low); //Recursive call with new high at middle -1, value in left subarray
+	}
+	else
+	{
+		return binarySearchRecursive(target, array, high, middle + 1); //Recursive call with new low at middle + 1, value in right subarray
+	}
+}
+
+int binarySearchLoop(int target, int array[]) 
+{
+	int low = 0;
+	int high = arraySize - 1;
+
+	while (high >= low) 
+	{
+		int middle = low + (high + low) / 2;
+		if (array[middle] == target) 
+		{
+			return middle;
+		}
+		else if (array[middle] > target) 
+		{
+			high = middle - 1;
+		}
+		else 
+		{
+			low = middle + 1;
+		}
+	}
+	return -1; //Value not found in array
+}
+
+int main(int, char**) {
+
+	int searchList[arraySize];
+	loadFromFile(searchList, "binarysearchIn.txt");
+	int recursiveIndex = binarySearchRecursive(7, searchList, arraySize - 1, 0);
+
+	int loopIndex = binarySearchLoop(7, searchList);
+	return 0;
+}
+```
+**Output**
+
+<img width="918" height="569" alt="image" src="https://github.com/user-attachments/assets/30df6fe9-cd58-481f-9f89-25d76e8bd28c" />
+
+**Reflection**
+
+The recursive binary search method uses function calls to recursively search each relevant sub array, whereas the loop binary search sets high and low variables before looping. In both cases, the middle of the array is found using the high and low variables, the middle value in the array is then compared to the target. If the target is at the middle value, we've found it and return the value of middle (index of target), if it is not we compare the value of target to the value at middle, if array[middle] > target, then the target must be to the left of the middle, if it is < then the target must be to the right of the middle.
+
+Despite the recursive function call being clear conceptually and matching algorithmic design principles such as divide and conqeur, I find the loop implementation easier to follow and understand. It is easier for me to at a glance understand the logic of the loop and how it shifts the low and high variables, furthermore it is easier to understand when debugging as there are no repeated function calls and jumps. 
