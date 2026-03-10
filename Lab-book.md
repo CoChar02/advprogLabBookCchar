@@ -2693,3 +2693,109 @@ The program then executes as above, loading the address of `[high]` into the `ea
 <img width="1156" height="538" alt="image" src="https://github.com/user-attachments/assets/46a7118f-c839-4358-8984-18ed06b21558" />
 
 As we can see, EDX is storing the `00 00 00 0a` which was written at the same memory location as our original value for [high]. Our method returned a reference to an address that went out of scope and did not exist in the calling function, this causes unpredictable behaviour, such as in our case where the value of `value2` is 20 because the same memory address is being accessed twice in order to make the calculation.
+
+## Week 6 - Lab F
+### Q1. Template Grid
+
+**Question**
+You are going to turn the Grid class into a template class so that we can store any type of number, e.g. float, int, double, into our 2D grid array.
+**Solution**
+```c++
+#pragma once
+#include <iostream>
+#include <fstream>
+template<class T>
+class Grid
+{
+public:
+	Grid()
+	{
+		gridYSize = sizeof(m_grid) / sizeof(m_grid[0]);
+		gridXSize = sizeof(m_grid[0]) / sizeof(m_grid[0][0]);
+	}
+
+	~Grid()
+	{
+	}
+
+	void LoadGrid(const char filename[])
+	{
+		std::ifstream inputStream(filename); //Create input file stream
+		if (inputStream.fail())
+		{ //Check input file was successfully opened.
+			std::cout << "Error Opening File, check file " << filename << " exists and has correct permissions." << std::endl;
+			inputStream.close();
+			return;
+		}
+
+		//'this' is a pointer to the Grid object, deference it and pass to the method
+		inputStream >> *this;
+
+		//Close input file stream
+		inputStream.close();
+	}
+
+	void SaveGrid(const char filename[])
+	{
+		std::ofstream outputStream(filename, std::ios::out); //Open in write/overwrite mode
+		if (!outputStream.is_open()) //Check file was able to be opened
+		{
+			outputStream.close();
+			std::cout << "Error creating or opening output file." << std::endl;
+			return;
+		}
+
+		outputStream << *this;
+
+		outputStream.close();
+	}
+
+
+	friend std::ostream& operator<<(std::ostream& stream, const Grid<T>& g)
+	{
+		for (int y = 0; y < g.gridYSize; y++)
+		{
+			for (int x = 0; x < g.gridXSize; x++)
+			{
+				stream << g.m_grid[y][x]; //Write value to file
+				if (x == g.gridXSize - 1) //If last value on the row
+				{
+					stream << '\n'; //insert end of line
+				}
+				else
+				{
+					stream << ' '; //else add whitespace
+				}
+			}
+		}
+		return stream;
+	}
+
+
+	friend std::istream& operator>>(std::istream& stream, Grid<T>& g)
+	{
+		for (int y = 0; y < g.gridYSize; y++) //for each y value (every row in the grid)
+		{
+			for (int x = 0; x < g.gridXSize; x++) // for each x value (every column in the grid)
+			{
+				T value;
+				if (!(stream >> value)) //Read next value from file, if this fails ran out of integers in the file, or encountered a non-integer value.
+				{
+					return stream;
+				}
+				g.m_grid[y][x] = value; //Set value in the grid to the read value
+			}
+		}
+		return stream;
+	}
+
+private:
+	//Initialise member variables
+	T m_grid[9][9] = {}; //Initialises to 0s
+	int gridYSize = 0;
+	int gridXSize = 0;
+};
+```
+
+**Output**
+<img width="536" height="278" alt="image" src="https://github.com/user-attachments/assets/7844a6b1-ff4f-4eb7-9883-a4457dbd9e75" />
