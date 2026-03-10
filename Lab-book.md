@@ -2698,7 +2698,9 @@ As we can see, EDX is storing the `00 00 00 0a` which was written at the same me
 ### Q1. Template Grid
 
 **Question**
+
 You are going to turn the Grid class into a template class so that we can store any type of number, e.g. float, int, double, into our 2D grid array.
+
 **Solution**
 ```c++
 #pragma once
@@ -2798,4 +2800,5 @@ private:
 ```
 
 **Output**
+
 <img width="536" height="278" alt="image" src="https://github.com/user-attachments/assets/7844a6b1-ff4f-4eb7-9883-a4457dbd9e75" />
