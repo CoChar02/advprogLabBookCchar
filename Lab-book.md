@@ -2964,3 +2964,22 @@ int main(int, char**) {
 The recursive binary search method uses function calls to recursively search each relevant sub array, whereas the loop binary search sets high and low variables before looping. In both cases, the middle of the array is found using the high and low variables, the middle value in the array is then compared to the target. If the target is at the middle value, we've found it and return the value of middle (index of target), if it is not we compare the value of target to the value at middle, if array[middle] > target, then the target must be to the left of the middle, if it is < then the target must be to the right of the middle.
 
 Despite the recursive function call being clear conceptually and matching algorithmic design principles such as divide and conqeur, I find the loop implementation easier to follow and understand. It is easier for me to at a glance understand the logic of the loop and how it shifts the low and high variables, furthermore it is easier to understand when debugging as there are no repeated function calls and jumps. 
+
+## Week 7 - Lab G
+
+### Q1. Parasoft
+
+**Question**
+We are going to fix the first Severity 1 rule violation in Utility.h that Parasoft displays A class 'Utility' must declare a copy assignment operator
+
+Go to the line of code (line 6 of Utility.h); this can be done by double-clicking on the violation.
+Change this line appropriately.
+Re-run Parasoft on the whole project, and you should see that there are now 10 violations, as we have now fixed the one on line 6.
+Correct the other Severity 1 and 3 violations. Do not worry about the other violations as you may not have covered these yet in the module.
+
+**Solution**
+
+<img width="1901" height="734" alt="image" src="https://github.com/user-attachments/assets/871a2c1c-ba75-4071-ac77-d5cf7e8babdf" />
+
+
+
