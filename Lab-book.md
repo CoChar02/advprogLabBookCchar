@@ -2899,19 +2899,19 @@ void loadFromFile(int array[], const char filename[])
 }
 
 
-int binarySearchRecursive(int target, int array[], int high, int low) 
+int binarySearchRecursive(int target, int array[], int high, int low)
 {
-	if (high < low) 
+	if (high < low)
 	{
 		return -1; //Not in array
 	}
 	int middle = (high + low) / 2; //Goto middle of array segment
 
-	if (array[middle] == target) 
+	if (array[middle] == target)
 	{
 		return middle; //Return index of middle value
 	}
-	else if (array[middle] > target) 
+	else if (array[middle] > target)
 	{
 		return binarySearchRecursive(target, array, middle - 1, low); //Recursive call with new high at middle -1, value in left subarray
 	}
@@ -2921,23 +2921,23 @@ int binarySearchRecursive(int target, int array[], int high, int low)
 	}
 }
 
-int binarySearchLoop(int target, int array[]) 
+int binarySearchLoop(int target, int array[])
 {
 	int low = 0;
 	int high = arraySize - 1;
 
-	while (high >= low) 
+	while (high >= low)
 	{
-		int middle = low + (high + low) / 2;
-		if (array[middle] == target) 
+		int middle = (high + low) / 2;
+		if (array[middle] == target)
 		{
 			return middle;
 		}
-		else if (array[middle] > target) 
+		else if (array[middle] > target)
 		{
 			high = middle - 1;
 		}
-		else 
+		else
 		{
 			low = middle + 1;
 		}
@@ -2949,9 +2949,9 @@ int main(int, char**) {
 
 	int searchList[arraySize];
 	loadFromFile(searchList, "binarysearchIn.txt");
-	int recursiveIndex = binarySearchRecursive(7, searchList, arraySize - 1, 0);
+	int recursiveIndex = binarySearchRecursive(37, searchList, arraySize - 1, 0);
 
-	int loopIndex = binarySearchLoop(7, searchList);
+	int loopIndex = binarySearchLoop(37, searchList);
 	return 0;
 }
 ```
