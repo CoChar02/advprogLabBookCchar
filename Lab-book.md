@@ -2981,5 +2981,231 @@ Correct the other Severity 1 and 3 violations. Do not worry about the other viol
 
 <img width="1901" height="734" alt="image" src="https://github.com/user-attachments/assets/871a2c1c-ba75-4071-ac77-d5cf7e8babdf" />
 
+Header.h
+```c++
+#pragma once
+class Utility
+{
+public:
+	Utility(void);
+	~Utility(void);
+	void SetSize(const int size);
+	void Process() const;
+	int Mult(int a, int b) const;
+
+private:
+	int *m_numberArray;
+	int m_size;
+};
+```
+Original Header file with the following violations
+```
+Message: A class 'Utility' must declare a copy assignment operator
+Line: 1
+Rule ID: MRM.37
+Severity: 1
 
 
+Message: A class 'Utility' must declare a copy constructor
+Line: 1
+Rule ID: MRM.38
+Severity: 1
+
+
+Message: Class 'Utility' shall declare a copy assignment operator
+Line: 1
+Rule ID: MRM.49
+Severity: 3
+
+
+Message: Class 'Utility' shall declare a copy constructor
+Line: 1
+Rule ID: MRM.49
+Severity: 3
+
+
+Message: Class 'Utility' should be final
+Line: 1
+Rule ID: CODSTA-MCPP.23
+Severity: 3
+
+
+Message: Class Utility has a non-trivial destructor, but no copy constructor nor copy assignment operator
+Line: 1
+Rule ID: MRM.40_d
+Severity: 3
+
+
+Message: Every include file must contain a mechanism that prevents multiple inclusion
+Line: 1
+Rule ID: PFO.08
+Severity: 3
+
+
+Message: Function 'Utility' uses ( void )
+Line: 4
+Rule ID: CODSTA.07
+Severity: 3
+
+
+Message: Function '~Utility' uses ( void )
+Line: 5
+Rule ID: CODSTA.07
+Severity: 3
+```
+
+
+Header.h
+```c++
+#pragma once
+class Utility final
+{
+public:
+	Utility();
+	Utility(const Utility& obj);
+	~Utility();
+	Utility& operator=(const Utility& obj);
+
+	void SetSize(const int size);
+	void Process() const;
+	int Mult(int a, int b) const;
+
+private:
+	int *m_numberArray;
+	int m_size;
+};
+```
+Fixed header file, the following changes were made
+- Class was declared final, this prevents memory leaks caused by disallowing the class to be inherited from. This stops the destructor being called on the base pointer using an instance of a derived class (`base* ptr = derived(); delete(ptr); //Base class deconstructor used, may cause memory leaks by not deallocating derived class members`)
+- Utility Constructor and deconstructor no longer take void as input; void as a function parameter is a hold over from C [Source](https://softwareengineering.stackexchange.com/questions/286490/what-is-the-difference-between-function-and-functionvoid)
+- The copy constuctor (`Utility(const Utility& obj`) and copy assignment operator (`Utility& operator=(const Utility& obj`) were added, these allow for making instances of an object using an existing object, by excplictely declaring these functions we allow for custom copy logic to be declared, "Rule of three" states that if a class needs a custom deconstructor, copy constructor, or copy assignment operator, then it probably needs all three as youre dealing with dynamic memory.
+Utility.cpp
+```c++
+#include "Utility.h"
+
+
+Utility::Utility(void) : m_numberArray(nullptr), m_size(0)
+{
+}
+
+Utility::~Utility(void)
+{
+	if (m_numberArray) {
+		delete[] m_numberArray;
+		m_numberArray = nullptr;
+	}
+}
+
+void Utility::SetSize(const int size)
+{
+	if(m_numberArray) delete [] m_numberArray;
+	m_size = size;
+	m_numberArray = new int[m_size];
+}
+
+void Utility::Process() const
+{
+	for(int n = 0; n < m_size-1; ++n)
+	{
+		int result = Mult(m_numberArray[n], m_numberArray[n+1]);
+	}
+}
+
+int Utility::Mult(int a, int b) const
+{
+	return a * b;
+}
+```
+Original Utility.cpp file with the following errors
+```
+Message: Declare local variable 'result' as const
+Line: 41
+Rule ID: CODSTA-CPP.53
+Severity: 3
+
+
+Message: Local variable 'result' declared but not used
+Line: 41
+Rule ID: OPT.02
+Severity: 4
+```
+Updated Utility.cpp
+```c++
+#include "Utility.h";
+
+
+Utility::Utility() : m_numberArray(nullptr), m_size(0)
+{
+}
+//DEEP COPY
+Utility::Utility(const Utility& obj) : m_numberArray(nullptr), m_size(obj.m_size) //Initialise with same size as original
+{
+	if (obj.m_numberArray) 
+	{
+		m_numberArray = new int[m_size]; //Declare new array
+		for (int i = 0; i < m_size; ++i)
+		{
+			m_numberArray[i] = obj.m_numberArray[i];
+		}
+	}
+}
+
+Utility::~Utility()
+{
+	if (m_numberArray) {
+		delete[] m_numberArray;
+		m_numberArray = nullptr;
+	}
+}
+
+///Using techniques from: Learncpp, Shallow vs Deep copying [Source Code] Accessed 14/03/26 https://www.learncpp.com/cpp-tutorial/shallow-vs-deep-copying/
+Utility& Utility::operator=(const Utility& obj)
+{
+	if (this == &obj) //Self assignment guard, early exit
+	{
+		return *this;
+	}
+	delete[] m_numberArray; //deallocate data in current array
+	m_numberArray = nullptr; //Null the dangling pointer
+
+	//copy size
+	m_size = obj.m_size;
+
+	if (obj.m_numberArray) //Assign values to the numberArray
+	{
+		m_numberArray = new int[m_size]; //Allocate new array size
+		for (int i = 0; i < m_size; ++i) //Copy m_numberarray
+		{
+			m_numberArray[i] = obj.m_numberArray[i];
+		}
+	}
+
+	return *this;
+}
+
+void Utility::SetSize(const int size)
+{
+	if(m_numberArray) delete [] m_numberArray;
+	m_size = size;
+	m_numberArray = new int[m_size];
+}
+
+void Utility::Process() const
+{
+	int result = 0;
+	for(int n = 0; n < m_size-1; ++n)
+	{
+		result += Mult(m_numberArray[n], m_numberArray[n+1]);
+	}
+}
+
+int Utility::Mult(int a, int b) const
+{
+	return a * b;
+}
+```
+Fixed source file, the following changes were made
+- Utility Constructor and deconstructor no longer take void as input; void as a function parameter is a hold over from C [Source](https://softwareengineering.stackexchange.com/questions/286490/what-is-the-difference-between-function-and-functionvoid)
+- The copy constuctor (`Utility(const Utility& obj`) was added, this creates a deep copy by initalising the `m_numberArray` and `m_size` variables to `nullptr` and `obj.m_size` respectively, this initialises the array pointer and the sets the `m_size` to be the same as the copy target. If the copy target's numberArray is not a nullptr, the `m_numberArray` is initialised as an integer array of [`m_size`], values are then copied from the original to the new object.
+- The copy assignment operator was also created (`Utility& Utility::operator=(const Utility& obj)`, This creates a deep copy of the rhs object into the lhs object. First a self assignment guard is called such that there is no copying done if both lhs and rhs are the same object. The current `m_numberArray` is then deallocated (and updated to a `nullptr`) in order to make sure there are no memory leaks or errors from the rhs having a different sized numberArray, Array size is then copied directly before a check is done to ensure that rhs' numberArray is not a nullptr. If the numberArray exists then `m_numberArray` is initialised as an integer array of size `m_size` before values are copied from rhs into lhs.
+- The variable `result` in `Process()` was changed from being declared in the loop to above it and result is now the cumulative total of mult across the array. (my interpretation of what this method is meant to do).
